@@ -3,13 +3,99 @@
 #define _WIN32_WINNT 0x0500
 #include <windows.h>
 #include <cstdlib>
+#include <ctime>
 
+struct card
+{
+    int suit;
+    int value;
+};
+
+
+card deck[52];
 using namespace std;
 
 HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 COORD CursorPosition;
 
+card generateCard()
+{
+    card newCard;
+    newCard.suit=rand()%4+1;
+    newCard.value=rand()%13+1;
+    return newCard;
+}
 
+bool cardExists(int cardNumber, card newCard)
+{
+    for(int i=0; i<cardNumber; i++)
+        if(deck[i].suit==newCard.suit && deck[i].value==newCard.value)
+            return false;
+    return true;
+}
+
+void newDeck()
+{
+    srand(time(NULL));
+    card newCard=generateCard();
+    deck[0].value=newCard.value;
+    deck[0].suit=newCard.suit;
+    int cardNumber=1;
+    while(cardNumber!=52)
+    {
+        newCard=generateCard();
+        while(!cardExists(cardNumber, newCard))
+            newCard=generateCard();
+        deck[cardNumber].value=newCard.value;
+        deck[cardNumber].suit=newCard.suit;
+        cardNumber++;
+
+    }
+
+}
+
+
+void printDeck()
+{
+    for(int i=0; i<52; i++)
+    {
+
+        switch (deck[i].suit)
+        {
+        case 1:
+            cout<<"inima ";
+            break;
+        case 2:
+            cout<<"trifoi ";
+            break;
+        case 3:
+            cout<<"romb ";
+            break;
+        case 4:
+            cout<<"spada ";
+            break;
+        }
+        switch (deck[i].value)
+        {
+        case 1:
+            cout<<"as"<<endl;
+            break;
+        case 11:
+            cout<<"jalet"<<endl;
+            break;
+        case 12:
+            cout<<"dama"<<endl;
+            break;
+        case 13:
+            cout<<"as"<<endl;
+            break;
+        default:
+            cout<<deck[i].value<<endl;
+            break;
+        }
+
+    }
+}
 void setConsoleSize()
 {
     HWND console = GetConsoleWindow();
@@ -107,8 +193,8 @@ void openingScreen()
     key=_getch();
     if(key=='C' || key=='c')
         mainMenu();
-        else
-            openingScreen();
+    else
+        openingScreen();
 }
 
 
@@ -116,7 +202,9 @@ int main()
 {
 
     setConsoleSize();
-    openingScreen();
+    //openingScreen();
+    newDeck();
+    printDeck();
     return 0;
 }
 
