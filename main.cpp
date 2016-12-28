@@ -232,6 +232,17 @@ int cardValue(card newCard)
     return cardVal;
 }
 
+bool checkBust(card deck[], int number)
+{
+    int sum=0;
+    for(int i=0; i<number; i++)
+        sum=sum+cardValue(deck[i]);
+    if(sum>21)
+        return true;
+    return false;
+
+}
+
 void playHand()
 {
     system("CLS");
@@ -245,39 +256,90 @@ void playHand()
     addPlayerCard();
     cout<<"Your hand : ";
     printCards(playerHand,playerHandSize, false);
-    for(int i=0;i<playerHandSize;i++)
+    for(int i=0; i<playerHandSize; i++)
         playerSum=playerSum+cardValue(playerHand[i]);
     cout<<"  Your sum: "<<playerSum<<endl;
     addDealerCard();
     addDealerCard();
     cout<<"Dealer hand : ";
     printCards(dealerHand,dealerHandSize, true);
-    for(int i=0;i<dealerHandSize;i++)
+    for(int i=0; i<dealerHandSize; i++)
         dealerSum=dealerSum+cardValue(dealerHand[i]);
-        cout<<endl<<"Press H to hit";
+    cout<<endl<<"Press H to hit and S to stand";
     char hit;
     hit=_getch();
 
-   while((hit=='h'||hit=='H')&&playerHandSize!=5)
-   {
-       system("CLS");
-    addPlayerCard();
-    playerSum=0;
-    cout<<"Your hand : ";
-    printCards(playerHand,playerHandSize, false);
-    for(int i=0;i<playerHandSize;i++)
-        playerSum=playerSum+cardValue(playerHand[i]);
+    while((hit=='h'||hit=='H')&&playerHandSize!=5)
+    {
+        system("CLS");
+        addPlayerCard();
+        playerSum=0;
+        cout<<"Your hand : ";
+        printCards(playerHand,playerHandSize, false);
+        for(int i=0; i<playerHandSize; i++)
+            playerSum=playerSum+cardValue(playerHand[i]);
         cout<<"  Your sum: "<<playerSum<<endl;
         cout<<"Dealer hand : ";
-    printCards(dealerHand,dealerHandSize, true);
-    cout<<endl<<"Press H to hit";
-    hit=_getch();
-   }
+        printCards(dealerHand,dealerHandSize, true);
+        if(checkBust(playerHand,playerHandSize))
+        {
+            cout<<endl<<"You lost!";
+            hit='n';
+            cout<<endl<<"Play another hand? (Y/N)";
+            char anotherHand=_getch();
+            if(anotherHand=='y' || anotherHand=='Y')
+                playHand();
 
+        }
+        else if(playerSum==21)
+            cout<<endl<<"Blackjack! You win!";
+        else
+        {
+            cout<<endl<<"Press H to hit and S to stand";
+            hit=_getch();
+        }
+    }
+    while(dealerSum<17&&dealerHandSize!=5)
+    {
+        addDealerCard();
+        dealerSum=0;
+        playerSum=0;
+        system("cls");
+        cout<<"Your hand : ";
+        printCards(playerHand,playerHandSize, false);
+        for(int i=0; i<playerHandSize; i++)
+            playerSum=playerSum+cardValue(playerHand[i]);
+        cout<<"  Your sum: "<<playerSum<<endl;
+        cout<<"Dealer hand : ";
+        printCards(dealerHand,dealerHandSize, false);
+        for(int i=0; i<dealerHandSize; i++)
+            dealerSum=dealerSum+cardValue(dealerHand[i]);
+    }
+    system("cls");
+    cout<<"Your hand : ";
+    printCards(playerHand,playerHandSize, false);
+    cout<<"  Your sum: "<<playerSum<<endl;
+    cout<<"Dealer hand : ";
+    printCards(dealerHand,dealerHandSize, false);
+    cout<<"Dealer sum: "<<dealerSum<<endl;
+    if(checkBust(dealerHand,dealerHandSize))
+        cout<<endl<<"You win";
+    else if(dealerSum<playerSum)
+        cout<<endl<<"You win!";
+    else
+        if(dealerSum==playerSum)
+        cout<<endl<<"It's a tie!";
+     else
+        cout<<endl<<"You lost!";
+    cout<<endl<<"Play another hand? (Y/N)";
+    char anotherHand=_getch();
+    if(anotherHand=='y' || anotherHand=='Y')
+        playHand();
 }
+
 void singlePlayer()
 {
-  playHand();
+    playHand();
 }
 void multiPlayer()
 {
@@ -347,7 +409,6 @@ void openingScreen()
     else
         openingScreen();
 }
-
 
 int main()
 {
