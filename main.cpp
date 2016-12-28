@@ -5,15 +5,19 @@
 #include <cstdlib>
 #include <ctime>
 
+using namespace std;
+
+
 struct card
 {
     int suit;
     int value;
 };
 
-
 card deck[52];
-using namespace std;
+card playerHand[5], dealerHand[5];
+int deckCounter=0;
+int playerHandSize=0,dealerHandSize=0,playerSum=0,dealerSum=0;
 
 HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 COORD CursorPosition;
@@ -28,7 +32,7 @@ card generateCard()
 
 bool cardExists(int cardNumber, card newCard)
 {
-    for(int i=0; i<cardNumber; i++)
+    for(int i=0; i<=cardNumber; i++)
         if(deck[i].suit==newCard.suit && deck[i].value==newCard.value)
             return false;
     return true;
@@ -63,31 +67,31 @@ void printDeck()
         switch (deck[i].suit)
         {
         case 1:
-            cout<<"inima ";
+            cout<<"C ";
             break;
         case 2:
-            cout<<"trifoi ";
+            cout<<"D ";
             break;
         case 3:
-            cout<<"romb ";
+            cout<<"H ";
             break;
         case 4:
-            cout<<"spada ";
+            cout<<"S ";
             break;
         }
         switch (deck[i].value)
         {
         case 1:
-            cout<<"as"<<endl;
+            cout<<"A"<<endl;
             break;
         case 11:
-            cout<<"jalet"<<endl;
+            cout<<"J"<<endl;
             break;
         case 12:
-            cout<<"dama"<<endl;
+            cout<<"Q"<<endl;
             break;
         case 13:
-            cout<<"as"<<endl;
+            cout <<"K"<<endl;
             break;
         default:
             cout<<deck[i].value<<endl;
@@ -96,6 +100,60 @@ void printDeck()
 
     }
 }
+
+void printCard(card newCard)
+{
+    switch (newCard.value)
+    {
+    case 1:
+        cout<<"A";
+        break;
+    case 11:
+        cout<<"J";
+        break;
+    case 12:
+        cout<<"Q";
+        break;
+    case 13:
+        cout <<"K";
+        break;
+    default:
+        cout<<newCard.value;
+        break;
+    }
+    switch (newCard.suit)
+    {
+    case 1:
+        cout<<"C";
+        break;
+    case 2:
+        cout<<"D";
+        break;
+    case 3:
+        cout<<"H";
+        break;
+    case 4:
+        cout<<"S";
+        break;
+    }
+}
+
+void printCards(card deck[], int number, bool hideCard)
+{
+    if( hideCard)
+    {
+        cout<<" **";
+    }
+    else
+        printCard(deck[0]);
+    cout<<"   ";
+    for(int i=1; i<number; i++)
+    {
+        printCard(deck[i]);
+        cout<<"   ";
+    }
+}
+
 void setConsoleSize()
 {
     HWND console = GetConsoleWindow();
@@ -123,10 +181,103 @@ void updatePlayer()
     cout<<"Subprogram update jucator";
 }
 
-void singlePlayer()
+void addPlayerCard()
+{
+    if(deckCounter==52)
+    {
+        newDeck();
+        deckCounter=0;
+    }
+    else
+    {
+        playerHand[playerHandSize]=deck[deckCounter];
+        deckCounter++;
+        playerHandSize++;
+    }
+}
+
+void addDealerCard()
+{
+    if(deckCounter==52)
+    {
+        newDeck();
+        deckCounter=0;
+    }
+    else
+    {
+        dealerHand[dealerHandSize]=deck[deckCounter];
+        deckCounter++;
+        dealerHandSize++;
+    }
+}
+
+int cardValue(card newCard)
+{
+    int cardVal;
+    switch(newCard.value)
+    {
+    case 11:
+        cardVal=10;
+        break;
+    case 12:
+        cardVal=10;
+        break;
+    case 13:
+        cardVal=10;
+        break;
+    default:
+        cardVal=newCard.value;
+        break;
+    }
+    return cardVal;
+}
+
+void playHand()
 {
     system("CLS");
-    cout<<"Subprogram joc cu calculatorul";
+    newDeck();
+    playerHandSize=0;
+    dealerHandSize=0;
+    playerSum=0;
+    dealerSum=0;
+    system("CLS");
+    addPlayerCard();
+    addPlayerCard();
+    cout<<"Your hand : ";
+    printCards(playerHand,playerHandSize, false);
+    for(int i=0;i<playerHandSize;i++)
+        playerSum=playerSum+cardValue(playerHand[i]);
+    cout<<"  Your sum: "<<playerSum<<endl;
+    addDealerCard();
+    addDealerCard();
+    cout<<"Dealer hand : ";
+    printCards(dealerHand,dealerHandSize, true);
+    for(int i=0;i<dealerHandSize;i++)
+        dealerSum=dealerSum+cardValue(dealerHand[i]);
+        cout<<endl<<"Press H to hit";
+    char hit;
+    hit=_getch();
+
+   while((hit=='h'||hit=='H')&&playerHandSize!=5)
+   {
+       system("CLS");
+    addPlayerCard();
+    playerSum=0;
+    cout<<"Your hand : ";
+    printCards(playerHand,playerHandSize, false);
+    for(int i=0;i<playerHandSize;i++)
+        playerSum=playerSum+cardValue(playerHand[i]);
+        cout<<"  Your sum: "<<playerSum<<endl;
+        cout<<"Dealer hand : ";
+    printCards(dealerHand,dealerHandSize, true);
+    cout<<endl<<"Press H to hit";
+    hit=_getch();
+   }
+
+}
+void singlePlayer()
+{
+  playHand();
 }
 void multiPlayer()
 {
@@ -202,9 +353,8 @@ int main()
 {
 
     setConsoleSize();
-    //openingScreen();
-    newDeck();
-    printDeck();
+    openingScreen();
+
     return 0;
 }
 
