@@ -4,16 +4,19 @@
 #include <windows.h>
 #include <cstdlib>
 #include <ctime>
+#include <fstream>
+#include <string.h>
+
+
+
 
 using namespace std;
-
-
 struct card
 {
     int suit;
     int value;
 };
-
+void mainMenu();
 card deck[52];
 card playerHand[5], dealerHand[5];
 int deckCounter=0;
@@ -172,7 +175,21 @@ void gotoXY(int x, int y)
 void newPlayer()
 {
     system("CLS");
-    cout<<"Subprogram inregistrare jucator";
+    fstream fileOut("f.txt", ios::app);
+    char username[100];
+    int amount=100;
+    cout<<"Inregistrare jucator";
+    cout<<endl<<"Tasteaza numele jucatorului: ";
+    cin>>username;
+    fileOut<<username<<"  "<<amount<<endl;
+    cout<<"Jucatorul a fost inregistrat cu succes cu suma de   "<<amount;
+    cout<<endl<<"Apasati M pentru a reveni la meniul principal";
+    char key;
+    key=_getch();
+    if(key=='m' || key=='M')
+        mainMenu();
+    else
+        cout<<"ati tastat gresit";
 }
 
 void updatePlayer()
@@ -245,7 +262,6 @@ bool checkBust(card deck[], int number)
 
 void playHand()
 {
-    system("CLS");
     newDeck();
     playerHandSize=0;
     dealerHandSize=0;
@@ -314,6 +330,7 @@ void playHand()
         printCards(dealerHand,dealerHandSize, false);
         for(int i=0; i<dealerHandSize; i++)
             dealerSum=dealerSum+cardValue(dealerHand[i]);
+
     }
     system("cls");
     cout<<"Your hand : ";
@@ -326,10 +343,9 @@ void playHand()
         cout<<endl<<"You win";
     else if(dealerSum<playerSum)
         cout<<endl<<"You win!";
-    else
-        if(dealerSum==playerSum)
+    else if(dealerSum==playerSum)
         cout<<endl<<"It's a tie!";
-     else
+    else
         cout<<endl<<"You lost!";
     cout<<endl<<"Play another hand? (Y/N)";
     char anotherHand=_getch();
@@ -349,7 +365,31 @@ void multiPlayer()
 void scores()
 {
     system("CLS");
-    cout<<"Subprogram consultat scorurile";
+    fstream fileIn("f.txt", ios::in);
+    cout<<"Tasteaza numele utilizatorului: ";
+    char username[100];
+    char usernameFile[100];
+    int amount;
+    int ok=0;
+    cin>>username;
+    while(!fileIn.eof()&&ok==0)
+    {
+        fileIn>>usernameFile>>amount;
+        if(strcmp(username,usernameFile)==0)
+            {
+            cout<<"User: "<<username<<"  Suma: "<<amount<<endl;
+            ok=1;
+            }
+      if(ok==0)
+            cout<<endl<<"Jucatorul nu este inregistrat";
+     cout<<endl<<"Apasati M pentru a reveni la meniul principal";
+    char key;
+    key=_getch();
+    if(key=='m' || key=='M')
+        mainMenu();
+    else
+        cout<<"ati tastat gresit";
+    }
 }
 void mainMenu()
 {
@@ -366,8 +406,8 @@ void mainMenu()
     cout<<"4.Multiplayer";
     gotoXY(37,10);
     cout<<"5.Consultare scor";
-    gotoXY(25,12);
-    cout<<"Alegeti o optiune, tastand cifra corespunzatoare";
+    gotoXY(20,12);
+    cout<<"Alegeti o optiune, tastand cifra corespunzatoare sau E pentru Exit";
     gotoXY(0,14);
     char key;
     key=_getch();
@@ -387,6 +427,11 @@ void mainMenu()
         break;
     case '5':
         scores();
+        break;
+    case 'E':
+    case 'e':
+        system("cls");
+        cout<<"La revedere!";
         break;
     default:
         cout<<"Ai tastat gresit.Te rugam reincearca";
@@ -415,7 +460,6 @@ int main()
 
     setConsoleSize();
     openingScreen();
-
     return 0;
 }
 
