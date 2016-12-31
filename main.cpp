@@ -192,6 +192,7 @@ void newPlayer()
         cout<<"ati tastat gresit";
 }
 
+void update(username[50]);
 void updatePlayer()
 {
     system("CLS");
