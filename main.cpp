@@ -7,9 +7,6 @@
 #include <fstream>
 #include <string.h>
 
-
-
-
 using namespace std;
 struct card
 {
@@ -18,9 +15,9 @@ struct card
 };
 void mainMenu();
 card deck[52];
-card playerHand[5], dealerHand[5];
+card playerHand[5], dealerHand[5], player1Hand[5], player2Hand[5];
 int deckCounter=0;
-int playerHandSize=0,dealerHandSize=0,playerSum=0,dealerSum=0;
+int playerHandSize=0, player1HandSize=0, player2HandSize=0 ,dealerHandSize=0,playerSum=0, player1Sum, player2Sum, dealerSum=0;
 
 HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 COORD CursorPosition;
@@ -192,7 +189,7 @@ void newPlayer()
         cout<<"ati tastat gresit";
 }
 
-void update(username[50]);
+
 void updatePlayer()
 {
     system("CLS");
@@ -211,6 +208,35 @@ void addPlayerCard()
         playerHand[playerHandSize]=deck[deckCounter];
         deckCounter++;
         playerHandSize++;
+    }
+}
+
+void addPlayer1Card()
+{
+    if(deckCounter==52)
+    {
+        newDeck();
+        deckCounter=0;
+    }
+    else
+    {
+        player1Hand[player1HandSize]=deck[deckCounter];
+        deckCounter++;
+        player1HandSize++;
+    }
+}
+void addPlayer2Card()
+{
+    if(deckCounter==52)
+    {
+        newDeck();
+        deckCounter=0;
+    }
+    else
+    {
+        player2Hand[player2HandSize]=deck[deckCounter];
+        deckCounter++;
+        player2HandSize++;
     }
 }
 
@@ -360,8 +386,24 @@ void singlePlayer()
 }
 void multiPlayer()
 {
-    system("CLS");
-    cout<<"Subprogram joc cu alt jucator";
+    newDeck();
+    system("cls");
+    player1Sum=0;
+    player2Sum=0;
+    addPlayer1Card();
+    addPlayer1Card();
+    addPlayer2Card();
+    addPlayer2Card();
+    cout<<"Player 1 Hand: ";
+    printCards(player1Hand, player1HandSize, false);
+    for(int i=0; i<player1HandSize; i++)
+            player1Sum=player1Sum+cardValue(player1Hand[i]);
+    cout<<" Player 1 Sum: "<<player1Sum<<endl;
+    cout<<"Player 2 Hand: ";
+    printCards(player2Hand, player2HandSize, false);
+    for(int i=0; i<player2HandSize; i++)
+            player2Sum=player2Sum+cardValue(player2Hand[i]);
+    cout<<" Player 2 Sum: "<<player2Sum<<endl;
 }
 void scores()
 {
