@@ -173,13 +173,31 @@ void newPlayer()
 {
     system("CLS");
     fstream fileOut("f.txt", ios::app);
-    char username[100];
-    int amount=100;
+    fstream fileIn("f.txt", ios::in);
+    char username[10], usernameFile[10];
+    int initialAmount=100;
+    int amount;
     cout<<"Inregistrare jucator";
     cout<<endl<<"Tasteaza numele jucatorului: ";
     cin>>username;
-    fileOut<<username<<"  "<<amount<<endl;
-    cout<<"Jucatorul a fost inregistrat cu succes cu suma de   "<<amount;
+    bool ok=true;
+    while(!fileIn.eof())
+    {
+        fileIn>>usernameFile>>amount;
+        if(strcmp(username,usernameFile)==0)
+        {
+            cout<<"Jucatorul este deja inregistrat";
+            ok=false;
+        }
+
+    }
+    if(ok==true)
+    {
+        fileOut<<username<<"  "<<initialAmount<<endl;
+        cout<<"Jucatorul a fost inregistrat cu succes cu suma de   "<<initialAmount;
+    }
+    fileIn.close();
+    fileOut.close();
     cout<<endl<<"Apasati M pentru a reveni la meniul principal";
     char key;
     key=_getch();
@@ -189,11 +207,56 @@ void newPlayer()
         cout<<"ati tastat gresit";
 }
 
+bool update(char username[10], int currentAmount)
+{
+    char usernameFile[10];
+    int  amountFile;
+    fstream fileIn("f.txt", ios::in);
+    fstream auxFileIn("faux.txt", ios::in);
+    fstream auxFileOut("faux.txt", ios::out);
+    bool ok=false;
+    fileIn>>usernameFile>>amountFile;
+    while(!fileIn.eof())
+    {
+        if(strcmp(usernameFile,username)==0)
+        {
+            auxFileOut<<username<<"  "<<currentAmount<<endl;
+            ok=true;
+        }
+        else
+            auxFileOut<<usernameFile<<"  "<<amountFile<<endl;
+        fileIn>>usernameFile>>amountFile;
+    }
+
+   fstream fileOut("f.txt", ios::out);
+   auxFileIn>>usernameFile>>amountFile;
+   while(!auxFileIn.eof())
+    {
+        fileOut<<usernameFile<<"   "<<amountFile<<endl;
+        auxFileIn>>usernameFile>>amountFile;
+    }
+   return ok;
+}
 
 void updatePlayer()
 {
     system("CLS");
-    cout<<"Subprogram update jucator";
+    char username[10];
+    int amount;
+    cout<<"Tastati numele jucatorului pentru care se va face update"<<endl;
+    cin>>username;
+    cout<<"Tastati noua suma"<<endl;
+    cin>>amount;
+    if(update(username,amount))
+        cout<<"Update facut cu succes";
+    else cout<<"Jucatorul nu este inregistrat";
+    cout<<endl<<"Apasati M pentru a reveni la meniul principal";
+    char key;
+    key=_getch();
+    if(key=='m' || key=='M')
+        mainMenu();
+    else
+        cout<<endl<<"Ati tastat gresit";
 }
 
 void addPlayerCard()
@@ -410,8 +473,8 @@ void scores()
     system("CLS");
     fstream fileIn("f.txt", ios::in);
     cout<<"Tasteaza numele utilizatorului: ";
-    char username[100];
-    char usernameFile[100];
+    char username[10];
+    char usernameFile[10];
     int amount;
     int ok=0;
     cin>>username;
@@ -423,6 +486,7 @@ void scores()
             cout<<"User: "<<username<<"  Suma: "<<amount<<endl;
             ok=1;
             }
+    }
       if(ok==0)
             cout<<endl<<"Jucatorul nu este inregistrat";
      cout<<endl<<"Apasati M pentru a reveni la meniul principal";
@@ -431,8 +495,8 @@ void scores()
     if(key=='m' || key=='M')
         mainMenu();
     else
-        cout<<"ati tastat gresit";
-    }
+        cout<<endl<<"Ati tastat gresit";
+
 }
 void mainMenu()
 {
@@ -503,6 +567,8 @@ int main()
 
     setConsoleSize();
     openingScreen();
+
+
     return 0;
 }
 
