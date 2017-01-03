@@ -7,6 +7,7 @@
 #include <fstream>
 #include <string.h>
 
+
 using namespace std;
 struct card
 {
@@ -32,9 +33,8 @@ void addPlayer2Card();
 void updatePlayer();
 bool update(char username[10], int currentAmount);
 void newPlayer();
-void printCards(card deck[], int number, bool hideCard);
-void printCard(card newCard);
-void printDeck();
+void printCards(card deck[], int number, bool hideCard, int y);
+void printCard(card newCard,int x, int y);
 void newDeck();
 bool cardExists(int cardNumber, card newCard);
 card generateCard();
@@ -105,98 +105,112 @@ void newDeck()
 
 }
 
-
-void printDeck()
+void printCard(card newCard,int x,int y)
 {
-    for(int i=0; i<52; i++)
-    {
-
-        switch (deck[i].suit)
-        {
-        case 1:
-            cout<<"C ";
-            break;
-        case 2:
-            cout<<"D ";
-            break;
-        case 3:
-            cout<<"H ";
-            break;
-        case 4:
-            cout<<"S ";
-            break;
-        }
-        switch (deck[i].value)
-        {
-        case 1:
-            cout<<"A"<<endl;
-            break;
-        case 11:
-            cout<<"J"<<endl;
-            break;
-        case 12:
-            cout<<"Q"<<endl;
-            break;
-        case 13:
-            cout <<"K"<<endl;
-            break;
-        default:
-            cout<<deck[i].value<<endl;
-            break;
-        }
-    }
-}
-
-void printCard(card newCard)
-{
-    switch (newCard.value)
-    {
-    case 1:
-        cout<<"A";
-        break;
-    case 11:
-        cout<<"J";
-        break;
-    case 12:
-        cout<<"Q";
-        break;
-    case 13:
-        cout <<"K";
-        break;
-    default:
-        cout<<newCard.value;
-        break;
-    }
+    char suit;
     switch (newCard.suit)
     {
     case 1:
-        cout<<"C";
+        suit='C';
         break;
     case 2:
-        cout<<"D";
+        suit='D';
         break;
     case 3:
-        cout<<"H";
+        suit='H';
         break;
     case 4:
-        cout<<"S";
+        suit='S';
         break;
     }
+
+    switch (newCard.value)
+    {
+    case 1:
+        gotoXY(x,y);
+        cout<<"  _____  ";
+        gotoXY(x,y+1);
+        cout<<" |"<<suit<<"    | ";
+        gotoXY(x,y+2);
+        cout<<" |  A  | ";
+        gotoXY(x,y+3);
+        cout<<" |____"<<suit<<"| ";
+        break;
+    case 11:
+        gotoXY(x,y);
+        cout<<"  _____  ";
+        gotoXY(x,y+1);
+        cout<<" |"<<suit<<"    | ";
+        gotoXY(x,y+2);
+        cout<<" |  J  | ";
+        gotoXY(x,y+3);
+        cout<<" |____"<<suit<<"| ";
+        break;
+    case 12:
+        gotoXY(x,y);
+        cout<<"  _____  ";
+        gotoXY(x,y+1);
+        cout<<" |"<<suit<<"    | ";
+        gotoXY(x,y+2);
+        cout<<" |  Q  | ";
+        gotoXY(x,y+3);
+        cout<<" |____"<<suit<<"| ";
+        break;
+    case 13:
+        gotoXY(x,y);
+        cout<<"  _____  ";
+        gotoXY(x,y+1);
+        cout<<" |"<<suit<<"    | ";
+        gotoXY(x,y+2);
+        cout<<" |  K  | ";
+        gotoXY(x,y+3);
+        cout<<" |____"<<suit<<"| ";
+        break;
+    case 10:
+        gotoXY(x,y);
+        cout<<"  _____  ";
+        gotoXY(x,y+1);
+        cout<<" |"<<suit<<"    | ";
+        gotoXY(x,y+2);
+        cout<<" |  10 | ";
+        gotoXY(x,y+3);
+        cout<<" |____"<<suit<<"| ";
+        break;
+    default:
+        gotoXY(x,y);
+        cout<<"  _____  ";
+        gotoXY(x,y+1);
+        cout<<" |"<<suit<<"    | ";
+        gotoXY(x,y+2);
+        cout<<" |  "<<newCard.value<<"  | ";
+        gotoXY(x,y+3);
+        cout<<" |____"<<suit<<"| ";
+        break;
+    }
+
 }
 
-void printCards(card deck[], int number, bool hideCard)
+void printCards(card deck[], int number, bool hideCard, int y)
 {
+    int x=0;
     if( hideCard)
     {
-        cout<<" **";
+         gotoXY(x,y);
+        cout<<"  _____  ";
+        gotoXY(x,y+1);
+        cout<<" |*    | ";
+        gotoXY(x,y+2);
+        cout<<" |  *  | ";
+        gotoXY(x,y+3);
+        cout<<" |____*| ";
     }
     else
-        printCard(deck[0]);
-    cout<<"   ";
+        printCard(deck[0],x,y);
     for(int i=1; i<number; i++)
     {
-        printCard(deck[i]);
-        cout<<"   ";
+        x=x+10;
+        printCard(deck[i],x,y);
+
     }
 }
 
@@ -406,27 +420,27 @@ void playerHits(char usernameSingle[10])
 {
     system("CLS");
     addPlayerCard();
-    cout<<"Suma disponibila: "<<playerAmount<<"   "<<"Suma pariata: "<<bet<<endl;
-    cout<<"Your hand : ";
-    printCards(playerHand,playerHandSize, false);
+    cout<<"Suma disponibila: "<<playerAmount<<"   "<<"Suma pariata: "<<bet<<endl<<endl;
+    cout<<"Cartile tale : ";
+    printCards(playerHand,playerHandSize, false,3);
     playerSum=sum(playerHand,playerHandSize);
-    cout<<"  Your sum: "<<playerSum<<endl;
-    cout<<"Dealer hand : ";
-    printCards(dealerHand,dealerHandSize, true);
+    cout<<"  Suma cartilor tale: "<<playerSum<<endl<<endl;
+    cout<<"Cartile dealerului: ";
+    printCards(dealerHand,dealerHandSize, false, 9);
     if(checkBust(playerHand,playerHandSize))
     {
-        cout<<endl<<"You lost!";
+        cout<<endl<<endl<<"Ai pierdut!";
         hit='n';
         anotherHand(usernameSingle);
     }
     else if(blackjack(playerHand,playerHandSize))
     {
-        cout<<endl<<"Blackjack! You win!";
+        cout<<endl<<endl<<"Blackjack! Ai castigat!";
         playerAmount=playerAmount+2*bet;
     }
     else
     {
-        cout<<endl<<"Press H to hit and S to stand";
+        cout<<endl<<endl<<"Apasa H ca sa mai iei o carte si S ca stai";
         hit=_getch();
     }
 }
@@ -435,13 +449,13 @@ void dealerHits()
 {
     addDealerCard();
     system("cls");
-    cout<<"Suma disponibila: "<<playerAmount<<"   "<<"Suma pariata: "<<bet<<endl;
-    cout<<"Your hand : ";
-    printCards(playerHand,playerHandSize, false);
+    cout<<"Suma disponibila: "<<playerAmount<<"   "<<"Suma pariata: "<<bet<<endl<<endl;
+    cout<<"Cartile tale : ";
+    printCards(playerHand,playerHandSize, false,3);
     playerSum=sum(playerHand,playerHandSize);
-    cout<<"  Your sum: "<<playerSum<<endl;
-    cout<<"Dealer hand : ";
-    printCards(dealerHand,dealerHandSize, false);
+    cout<<"  Suma cartilor tale: "<<playerSum<<endl<<endl;
+    cout<<"Cartile dealerului: ";
+    printCards(dealerHand,dealerHandSize, false, 9);
     dealerSum=sum(dealerHand,dealerHandSize);
 }
 
@@ -449,30 +463,30 @@ void whoWins()
 {
     if(checkBust(dealerHand,dealerHandSize))
     {
-        cout<<endl<<"You win";
+        cout<<endl<<endl<<"Ai castigat";
         playerAmount=playerAmount+2*bet;
     }
     else if(dealerSum<playerSum&&!checkBust(playerHand,playerHandSize))
     {
-        cout<<endl<<"You win!";
+        cout<<endl<<endl<<"Ai castigat!";
         playerAmount=playerAmount+2*bet;
     }
     else if(dealerSum==playerSum)
     {
-        cout<<endl<<"It's a tie!";
+        cout<<endl<<endl<<"Egalitate!";
         playerAmount=playerAmount+bet;
     }
     else
-        cout<<endl<<"You lost!";
+        cout<<endl<<endl<<"Ai pierdut!";
 
 }
 
 void anotherHand(char username[10])
 {
     update(username, playerAmount);
-    cout<<endl<<"Play another hand? (Y/N)";
+    cout<<endl<<endl<<"Joci inca un joc? (D/N)";
     char anotherHand=_getch();
-    if(anotherHand=='y' || anotherHand=='Y')
+    if(anotherHand=='D' || anotherHand=='d')
         playHand(username);
     else
         mainMenu();
@@ -511,28 +525,28 @@ void playHand(char usernameSingle[10])
     system("CLS");
     addPlayerCard();
     addPlayerCard();
-    cout<<"Suma disponibila: "<<playerAmount<<"   "<<"Suma pariata: "<<bet<<endl;
-    cout<<"Your hand : ";
-    printCards(playerHand,playerHandSize, false);
+    addDealerCard();
+    addDealerCard();
+    cout<<"Suma disponibila: "<<playerAmount<<"   "<<"Suma pariata: "<<bet<<endl<<endl;
+    cout<<"Cartile tale : ";
+    printCards(playerHand,playerHandSize, false,3);
     playerSum=sum(playerHand,playerHandSize);
-    cout<<"  Your sum: "<<playerSum<<endl;
-    addDealerCard();
-    addDealerCard();
-    cout<<"Dealer hand : ";
-    printCards(dealerHand,dealerHandSize, true);
+    cout<<"  Suma cartilor tale: "<<playerSum<<endl<<endl;
+    cout<<"Cartile dealerului: ";
+    printCards(dealerHand,dealerHandSize, false, 9);
     dealerSum=sum(dealerHand,dealerHandSize);
     if(blackjack(playerHand, playerHandSize))
     {
-        cout<<endl<<"Blackjack!Ai castigat!";
+        cout<<endl<<endl<<"Blackjack!Ai castigat!";
         playerAmount=playerAmount+2.5*bet;
         anotherHand(usernameSingle);
     }
     if(blackjack(dealerHand,dealerHandSize))
     {
-        cout<<endl<<"Blackjack la dealer!Ai pierdut!";
+        cout<<endl<<endl<<"Blackjack la dealer!Ai pierdut!";
         anotherHand(usernameSingle);
     }
-    cout<<endl<<"Press H to hit and S to stand";
+    cout<<endl<<endl<<"Apasa H ca sa ma iei o carte si S ca sa stai";
     hit=_getch();
 
     while((hit=='h'||hit=='H')&&playerHandSize!=5)
@@ -545,13 +559,13 @@ void playHand(char usernameSingle[10])
         dealerHits();
     }
     system("cls");
-    cout<<"Suma disponibila: "<<playerAmount<<"   "<<"Suma pariata: "<<bet<<endl;
-    cout<<"Your hand : ";
-    printCards(playerHand,playerHandSize, false);
-    cout<<"  Your sum: "<<playerSum<<endl;
-    cout<<"Dealer hand : ";
-    printCards(dealerHand,dealerHandSize, false);
-    cout<<"Dealer sum: "<<dealerSum<<endl;
+    cout<<"Suma disponibila: "<<playerAmount<<"   "<<"Suma pariata: "<<bet<<endl<<endl;
+    cout<<"Cartile tale : ";
+    printCards(playerHand,playerHandSize, false,3);
+    playerSum=sum(playerHand,playerHandSize);
+    cout<<"  Suma cartilor tale: "<<playerSum<<endl<<endl;
+    cout<<"Cartile dealerului: ";
+    printCards(dealerHand,dealerHandSize, false, 9);
     whoWins();
     anotherHand(usernameSingle);
 }
@@ -577,9 +591,9 @@ void singlePlayer()
     }
     if(ok==false)
     {
-        cout<<endl<<"Jucatorul nu este inregistrat.Doriti inregistrarea?(Y/N)";
+        cout<<endl<<"Jucatorul nu este inregistrat.Doriti inregistrarea?(D/N)";
         char registration=_getch();
-        if(registration=='Y'||registration=='y')
+        if(registration=='D'||registration=='d')
             newPlayer();
         else
             mainMenu();
@@ -598,21 +612,27 @@ void multiPlayer()
     newDeck();
     system("cls");
     player1Sum=0;
+    player1HandSize=0;
     player2Sum=0;
+    player2HandSize=0;
     addPlayer1Card();
     addPlayer1Card();
     addPlayer2Card();
     addPlayer2Card();
-    cout<<"Player 1 Hand: ";
-    printCards(player1Hand, player1HandSize, false);
-    for(int i=0; i<player1HandSize; i++)
-        player1Sum=player1Sum+cardValue(player1Hand[i]);
-    cout<<" Player 1 Sum: "<<player1Sum<<endl;
-    cout<<"Player 2 Hand: ";
-    printCards(player2Hand, player2HandSize, false);
-    for(int i=0; i<player2HandSize; i++)
-        player2Sum=player2Sum+cardValue(player2Hand[i]);
+    cout<<"Player 1 Hand: "<<endl;
+    printCards(player1Hand, player1HandSize, false,2);
+    player1Sum=sum(player1Hand,player1HandSize);
+    cout<<" Player 1 Sum: "<<player1Sum<<endl<<endl;
+    cout<<"Player 2 Hand: "<<endl;
+    printCards(player2Hand, player2HandSize, false, 8);
+    player2Sum=sum(player2Hand,player2HandSize);
     cout<<" Player 2 Sum: "<<player2Sum<<endl;
+    cout<<endl<<"Apasa R pentru restart";
+    char restart=_getch();
+    if(restart=='r'||restart=='R')
+            multiPlayer();
+    else
+        mainMenu();
 }
 
 void scores()
@@ -702,7 +722,7 @@ void openingScreen()
     gotoXY(40,5);
     cout<<title<<endl;
     gotoXY(33,10);
-    cout<<"Press C to continue...";
+    cout<<"Apasa C pentru a continua...";
     char key;
     key=_getch();
     if(key=='C' || key=='c')
