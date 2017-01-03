@@ -13,14 +13,61 @@ struct card
     int suit;
     int value;
 };
+
+void openingScreen();
 void mainMenu();
+void scores();
+void multiPlayer();
+void singlePlayer();
+void playHand(char usernameSingle[10]);
+void playerHits(char usernameSingle[10]);
+int sum(card deck[], int number);
+bool blackjack(card deck[], int number);
+bool checkBust(card deck[], int number);
+int cardValue(card newCard);
+void addDealerCard();
+void addPlayerCard();
+void addPlayer1Card();
+void addPlayer2Card();
+void updatePlayer();
+bool update(char username[10], int currentAmount);
+void newPlayer();
+void printCards(card deck[], int number, bool hideCard);
+void printCard(card newCard);
+void printDeck();
+void newDeck();
+bool cardExists(int cardNumber, card newCard);
+card generateCard();
+void setConsoleSize();
+void gotoXY(int x, int y);
+void dealerHits();
+void whoWins();
+void anotherHand(char username[10]);
+void betting();
+
 card deck[52];
 card playerHand[5], dealerHand[5], player1Hand[5], player2Hand[5];
 int deckCounter=0;
-int playerHandSize=0, player1HandSize=0, player2HandSize=0 ,dealerHandSize=0,playerSum=0, player1Sum, player2Sum, dealerSum=0;
-
+int playerHandSize=0, player1HandSize=0, player2HandSize=0,dealerHandSize=0,playerSum=0, player1Sum, player2Sum, dealerSum=0;
+int playerAmount=0,  bet=0;
+char hit;
 HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 COORD CursorPosition;
+
+void gotoXY(int x, int y)
+{
+    CursorPosition.X = x;
+    CursorPosition.Y = y;
+    SetConsoleCursorPosition(console,CursorPosition);
+}
+
+void setConsoleSize()
+{
+    HWND console = GetConsoleWindow();
+    RECT r;
+    GetWindowRect(console, &r);
+    MoveWindow(console, 300, 20, 800, 600, TRUE);
+}
 
 card generateCard()
 {
@@ -97,7 +144,6 @@ void printDeck()
             cout<<deck[i].value<<endl;
             break;
         }
-
     }
 }
 
@@ -154,20 +200,7 @@ void printCards(card deck[], int number, bool hideCard)
     }
 }
 
-void setConsoleSize()
-{
-    HWND console = GetConsoleWindow();
-    RECT r;
-    GetWindowRect(console, &r);
-    MoveWindow(console, 300, 20, 800, 600, TRUE);
-}
 
-void gotoXY(int x, int y)
-{
-    CursorPosition.X = x;
-    CursorPosition.Y = y;
-    SetConsoleCursorPosition(console,CursorPosition);
-}
 
 void newPlayer()
 {
@@ -228,14 +261,14 @@ bool update(char username[10], int currentAmount)
         fileIn>>usernameFile>>amountFile;
     }
 
-   fstream fileOut("f.txt", ios::out);
-   auxFileIn>>usernameFile>>amountFile;
-   while(!auxFileIn.eof())
+    fstream fileOut("f.txt", ios::out);
+    auxFileIn>>usernameFile>>amountFile;
+    while(!auxFileIn.eof())
     {
         fileOut<<usernameFile<<"   "<<amountFile<<endl;
         auxFileIn>>usernameFile>>amountFile;
     }
-   return ok;
+    return ok;
 }
 
 void updatePlayer()
@@ -347,106 +380,219 @@ bool checkBust(card deck[], int number)
     if(sum>21)
         return true;
     return false;
+}
+
+bool blackjack(card deck[], int number)
+{
+    int sum=0;
+    for(int i=0; i<number; i++)
+        sum=sum+cardValue(deck[i]);
+    if(sum==21)
+        return true;
+    return false;
 
 }
 
-void playHand()
+int sum(card deck[], int number)
+{
+    int sum=0;
+    for(int i=0; i<number; i++)
+        sum=sum+cardValue(deck[i]);
+    return sum;
+
+}
+
+void playerHits(char usernameSingle[10])
+{
+    system("CLS");
+    addPlayerCard();
+    cout<<"Suma disponibila: "<<playerAmount<<"   "<<"Suma pariata: "<<bet<<endl;
+    cout<<"Your hand : ";
+    printCards(playerHand,playerHandSize, false);
+    playerSum=sum(playerHand,playerHandSize);
+    cout<<"  Your sum: "<<playerSum<<endl;
+    cout<<"Dealer hand : ";
+    printCards(dealerHand,dealerHandSize, true);
+    if(checkBust(playerHand,playerHandSize))
+    {
+        cout<<endl<<"You lost!";
+        hit='n';
+        anotherHand(usernameSingle);
+    }
+    else if(blackjack(playerHand,playerHandSize))
+    {
+        cout<<endl<<"Blackjack! You win!";
+        playerAmount=playerAmount+2*bet;
+    }
+    else
+    {
+        cout<<endl<<"Press H to hit and S to stand";
+        hit=_getch();
+    }
+}
+
+void dealerHits()
+{
+    addDealerCard();
+    system("cls");
+    cout<<"Suma disponibila: "<<playerAmount<<"   "<<"Suma pariata: "<<bet<<endl;
+    cout<<"Your hand : ";
+    printCards(playerHand,playerHandSize, false);
+    playerSum=sum(playerHand,playerHandSize);
+    cout<<"  Your sum: "<<playerSum<<endl;
+    cout<<"Dealer hand : ";
+    printCards(dealerHand,dealerHandSize, false);
+    dealerSum=sum(dealerHand,dealerHandSize);
+}
+
+void whoWins()
+{
+    if(checkBust(dealerHand,dealerHandSize))
+    {
+        cout<<endl<<"You win";
+        playerAmount=playerAmount+2*bet;
+    }
+    else if(dealerSum<playerSum&&!checkBust(playerHand,playerHandSize))
+    {
+        cout<<endl<<"You win!";
+        playerAmount=playerAmount+2*bet;
+    }
+    else if(dealerSum==playerSum)
+    {
+        cout<<endl<<"It's a tie!";
+        playerAmount=playerAmount+bet;
+    }
+    else
+        cout<<endl<<"You lost!";
+
+}
+
+void anotherHand(char username[10])
+{
+    update(username, playerAmount);
+    cout<<endl<<"Play another hand? (Y/N)";
+    char anotherHand=_getch();
+    if(anotherHand=='y' || anotherHand=='Y')
+        playHand(username);
+    else
+        mainMenu();
+}
+
+void betting()
+{
+    system("CLS");
+    if(playerAmount==0)
+    {
+        cout<<"Suma disponibila prea mica";
+        cout<<endl<<"Apasa orice tasta pentru a reveni la meniu";
+        char key=_getch();
+        mainMenu();
+    }
+    else
+    {
+        cout<<"Suma disponibila: "<<playerAmount;
+        cout<<endl<<"Cat vrei sa pariezi? ";
+        cin>>bet;
+        if(bet>playerAmount)
+            betting();
+        else
+            playerAmount=playerAmount-bet;
+    }
+}
+
+void playHand(char usernameSingle[10])
 {
     newDeck();
     playerHandSize=0;
     dealerHandSize=0;
     playerSum=0;
     dealerSum=0;
+    betting();
     system("CLS");
     addPlayerCard();
     addPlayerCard();
+    cout<<"Suma disponibila: "<<playerAmount<<"   "<<"Suma pariata: "<<bet<<endl;
     cout<<"Your hand : ";
     printCards(playerHand,playerHandSize, false);
-    for(int i=0; i<playerHandSize; i++)
-        playerSum=playerSum+cardValue(playerHand[i]);
+    playerSum=sum(playerHand,playerHandSize);
     cout<<"  Your sum: "<<playerSum<<endl;
     addDealerCard();
     addDealerCard();
     cout<<"Dealer hand : ";
     printCards(dealerHand,dealerHandSize, true);
-    for(int i=0; i<dealerHandSize; i++)
-        dealerSum=dealerSum+cardValue(dealerHand[i]);
+    dealerSum=sum(dealerHand,dealerHandSize);
+    if(blackjack(playerHand, playerHandSize))
+    {
+        cout<<endl<<"Blackjack!Ai castigat!";
+        playerAmount=playerAmount+2.5*bet;
+        anotherHand(usernameSingle);
+    }
+    if(blackjack(dealerHand,dealerHandSize))
+    {
+        cout<<endl<<"Blackjack la dealer!Ai pierdut!";
+        anotherHand(usernameSingle);
+    }
     cout<<endl<<"Press H to hit and S to stand";
-    char hit;
     hit=_getch();
 
     while((hit=='h'||hit=='H')&&playerHandSize!=5)
     {
-        system("CLS");
-        addPlayerCard();
-        playerSum=0;
-        cout<<"Your hand : ";
-        printCards(playerHand,playerHandSize, false);
-        for(int i=0; i<playerHandSize; i++)
-            playerSum=playerSum+cardValue(playerHand[i]);
-        cout<<"  Your sum: "<<playerSum<<endl;
-        cout<<"Dealer hand : ";
-        printCards(dealerHand,dealerHandSize, true);
-        if(checkBust(playerHand,playerHandSize))
-        {
-            cout<<endl<<"You lost!";
-            hit='n';
-            cout<<endl<<"Play another hand? (Y/N)";
-            char anotherHand=_getch();
-            if(anotherHand=='y' || anotherHand=='Y')
-                playHand();
-
-        }
-        else if(playerSum==21)
-            cout<<endl<<"Blackjack! You win!";
-        else
-        {
-            cout<<endl<<"Press H to hit and S to stand";
-            hit=_getch();
-        }
+        playerHits(usernameSingle);
     }
+
     while(dealerSum<17&&dealerHandSize!=5)
     {
-        addDealerCard();
-        dealerSum=0;
-        playerSum=0;
-        system("cls");
-        cout<<"Your hand : ";
-        printCards(playerHand,playerHandSize, false);
-        for(int i=0; i<playerHandSize; i++)
-            playerSum=playerSum+cardValue(playerHand[i]);
-        cout<<"  Your sum: "<<playerSum<<endl;
-        cout<<"Dealer hand : ";
-        printCards(dealerHand,dealerHandSize, false);
-        for(int i=0; i<dealerHandSize; i++)
-            dealerSum=dealerSum+cardValue(dealerHand[i]);
-
+        dealerHits();
     }
     system("cls");
+    cout<<"Suma disponibila: "<<playerAmount<<"   "<<"Suma pariata: "<<bet<<endl;
     cout<<"Your hand : ";
     printCards(playerHand,playerHandSize, false);
     cout<<"  Your sum: "<<playerSum<<endl;
     cout<<"Dealer hand : ";
     printCards(dealerHand,dealerHandSize, false);
     cout<<"Dealer sum: "<<dealerSum<<endl;
-    if(checkBust(dealerHand,dealerHandSize))
-        cout<<endl<<"You win";
-    else if(dealerSum<playerSum)
-        cout<<endl<<"You win!";
-    else if(dealerSum==playerSum)
-        cout<<endl<<"It's a tie!";
-    else
-        cout<<endl<<"You lost!";
-    cout<<endl<<"Play another hand? (Y/N)";
-    char anotherHand=_getch();
-    if(anotherHand=='y' || anotherHand=='Y')
-        playHand();
+    whoWins();
+    anotherHand(usernameSingle);
 }
 
 void singlePlayer()
 {
-    playHand();
+    system("cls");
+    fstream fileIn("f.txt", ios::in);
+    char usernameSingle[10],usernameFile[10];
+    int amount;
+    bool ok=false;
+    cout<<"Tasteaza numele :";
+    cin>>usernameSingle;
+    while(!fileIn.eof()&&ok==0)
+    {
+        fileIn>>usernameFile>>amount;
+        if(strcmp(usernameSingle,usernameFile)==0)
+        {
+            playerAmount=amount;
+            cout<<endl<<"Suma disponibila este: "<<playerAmount;
+            ok=true;
+        }
+    }
+    if(ok==false)
+    {
+        cout<<endl<<"Jucatorul nu este inregistrat.Doriti inregistrarea?(Y/N)";
+        char registration=_getch();
+        if(registration=='Y'||registration=='y')
+            newPlayer();
+        else
+            mainMenu();
+    }
+    else if(ok==true && playerAmount==0)
+    {
+        cout<<"Suma disponibila este prea mica.";
+        mainMenu();
+    }
+    else
+        playHand(usernameSingle);
 }
+
 void multiPlayer()
 {
     newDeck();
@@ -460,14 +606,15 @@ void multiPlayer()
     cout<<"Player 1 Hand: ";
     printCards(player1Hand, player1HandSize, false);
     for(int i=0; i<player1HandSize; i++)
-            player1Sum=player1Sum+cardValue(player1Hand[i]);
+        player1Sum=player1Sum+cardValue(player1Hand[i]);
     cout<<" Player 1 Sum: "<<player1Sum<<endl;
     cout<<"Player 2 Hand: ";
     printCards(player2Hand, player2HandSize, false);
     for(int i=0; i<player2HandSize; i++)
-            player2Sum=player2Sum+cardValue(player2Hand[i]);
+        player2Sum=player2Sum+cardValue(player2Hand[i]);
     cout<<" Player 2 Sum: "<<player2Sum<<endl;
 }
+
 void scores()
 {
     system("CLS");
@@ -482,14 +629,14 @@ void scores()
     {
         fileIn>>usernameFile>>amount;
         if(strcmp(username,usernameFile)==0)
-            {
+        {
             cout<<"User: "<<username<<"  Suma: "<<amount<<endl;
             ok=1;
-            }
+        }
     }
-      if(ok==0)
-            cout<<endl<<"Jucatorul nu este inregistrat";
-     cout<<endl<<"Apasati M pentru a reveni la meniul principal";
+    if(ok==0)
+        cout<<endl<<"Jucatorul nu este inregistrat";
+    cout<<endl<<"Apasati M pentru a reveni la meniul principal";
     char key;
     key=_getch();
     if(key=='m' || key=='M')
@@ -498,6 +645,7 @@ void scores()
         cout<<endl<<"Ati tastat gresit";
 
 }
+
 void mainMenu()
 {
     system("CLS");
@@ -538,11 +686,12 @@ void mainMenu()
     case 'E':
     case 'e':
         system("cls");
+        gotoXY(40,5);
         cout<<"La revedere!";
+        gotoXY(0,12);
+        cout<<endl;
         break;
     default:
-        cout<<"Ai tastat gresit.Te rugam reincearca";
-        Sleep(1500);
         mainMenu();
     }
 }
@@ -564,11 +713,8 @@ void openingScreen()
 
 int main()
 {
-
     setConsoleSize();
     openingScreen();
-
-
     return 0;
 }
 
