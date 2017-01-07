@@ -49,7 +49,7 @@ void anotherHandMulti();
 void multiPlayerHits(card deck[], int deckSize, int number);
 void printMulti();
 void checking();
-
+void whoWinsMulti();
 
 card deck[52];
 card playerHand[5], dealerHand[5], player1Hand[5], player2Hand[5];
@@ -57,7 +57,7 @@ int deckCounter=0;
 int playerHandSize=0, player1HandSize=0, player2HandSize=0,dealerHandSize=0,playerSum=0, player1Sum, player2Sum, dealerSum=0;
 int playerAmount=0,  bet=0;
 char hit;
-bool done=false;
+bool player1Done=false,player2Done=false;
 HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
 COORD CursorPosition;
 
@@ -427,7 +427,7 @@ void playerHits(char usernameSingle[10])
     playerSum=sum(playerHand,playerHandSize);
     cout<<"  Suma cartilor tale: "<<playerSum<<endl<<endl;
     cout<<"Cartile dealerului: ";
-    printCards(dealerHand,dealerHandSize, false, 9);
+    printCards(dealerHand,dealerHandSize, true, 9);
     if(checkBust(playerHand,playerHandSize))
     {
         cout<<endl<<endl<<"Ai pierdut!";
@@ -528,7 +528,7 @@ void playerDoubles(char usernameSingle[10])
     playerSum=sum(playerHand,playerHandSize);
     cout<<"  Suma cartilor tale: "<<playerSum<<endl<<endl;
     cout<<"Cartile dealerului: ";
-    printCards(dealerHand,dealerHandSize, false, 9);
+    printCards(dealerHand,dealerHandSize, true, 9);
     if(checkBust(playerHand,playerHandSize))
     {
         cout<<endl<<endl<<"Ai pierdut!";
@@ -561,7 +561,7 @@ void playHand(char usernameSingle[10])
     playerSum=sum(playerHand,playerHandSize);
     cout<<"  Suma cartilor tale: "<<playerSum<<endl<<endl;
     cout<<"Cartile dealerului: ";
-    printCards(dealerHand,dealerHandSize, false, 9);
+    printCards(dealerHand,dealerHandSize, true, 9);
     dealerSum=sum(dealerHand,dealerHandSize);
     if(blackjack(playerHand, playerHandSize))
     {
@@ -677,27 +677,45 @@ void checking()
     if(checkBust(player1Hand,player1HandSize))
     {
         cout<<endl<<endl<<"Jucatorul 1 a pierdut!";
-        done=true;
+        player1Done=true;
+        player2Done=true;
         anotherHandMulti();
     }
     if(checkBust(player2Hand,player2HandSize))
     {
         cout<<endl<<endl<<"Jucatorul 2 a pierdut!";
-        done=true;
+        player1Done=true;
+        player2Done=true;
         anotherHandMulti();
     }
     if(blackjack(player1Hand,player1HandSize))
     {
         cout<<endl<<endl<<"Blackjack! Jucatorul 1 a castigat!";
-        done=true;
+        player1Done=true;
+        player2Done=true;
         anotherHandMulti();
     }
     if(blackjack(player2Hand,player2HandSize))
     {
         cout<<endl<<endl<<"Blackjack! Jucatorul 2 a castigat!";
-        done=true;
+        player1Done=true;
+        player2Done=true;
         anotherHandMulti();
     }
+}
+
+void whoWinsMulti()
+{
+    if(player1Sum<player2Sum)
+    {
+        cout<<endl<<endl<<"Jucatorul 2 a castigat!";
+    }
+    else if(player1Sum>player2Sum)
+    {
+        cout<<endl<<endl<<"Jucatorul 1 a castigat!";
+    }
+    else
+        cout<<endl<<endl<<"Egalitate!";
 }
 
 void multiPlayer()
@@ -723,27 +741,50 @@ void multiPlayer()
         cout<<endl<<"Jucatorul 2 castiga";
         anotherHandMulti();
     }
-    done=false;
-    while(done==false)
+    player1Done=false;
+    player2Done=false;
+    while(player1Done==false || player2Done==false)
     {
         system("cls");
         printMulti();
-        cout<<endl<<"Apasa H pentru Hit, S pentru Stand si D pentru Double";
-        char player1Option=_getch();
-        if(player1Option=='H' || player1Option=='h')
-            multiPlayerHits(player1Hand,player1HandSize,1);
-        checking();
+        if(player1Done==false)
+        {
+            cout<<endl<<"Este randul jucatorului 1";
+            cout<<endl<<"Apasa H pentru Hit, S pentru Stand si D pentru Double";
+            char player1Option=_getch();
+            if(player1Option=='H' || player1Option=='h')
+                multiPlayerHits(player1Hand,player1HandSize,1);
+            if(player1Option=='D' || player1Option=='d')
+            {
+                multiPlayerHits(player1Hand,player1HandSize,1);
+                player1Done=true;
+            }
+            if(player1Option=='S' || player1Option=='s')
+                player1Done=true;
+            checking();
+        }
+
         system("cls");
         printMulti();
-        cout<<endl<<"Este randul jucatorului 2";
-        cout<<endl<<"Apasa H pentru Hit, S pentru Stand si D pentru Double";
-        char player2Option=_getch();
-        if(player2Option=='H' || player2Option=='h')
-            multiPlayerHits(player2Hand,player2HandSize,2);
-        checking();
-        if((player1Option=='s'||player1Option=='S')&&(player2Option=='s'||player2Option=='S'))
-            done=true;
+        if(player2Done==false)
+        {
+            cout<<endl<<"Este randul jucatorului 2";
+            cout<<endl<<"Apasa H pentru Hit, S pentru Stand si D pentru Double";
+            char player2Option=_getch();
+            if(player2Option=='H' || player2Option=='h')
+                multiPlayerHits(player2Hand,player2HandSize,2);
+            if(player2Option=='D' || player2Option=='d')
+            {
+                multiPlayerHits(player2Hand,player2HandSize,2);
+                player2Done=true;
+            }
+            if(player2Option=='s' || player2Option=='S')
+                player2Done=true;
+            checking();
+
+        }
     }
+    whoWinsMulti();
     anotherHandMulti();
 
 }
@@ -846,7 +887,7 @@ void mainMenu()
         cout<<"La revedere!";
         gotoXY(0,12);
         cout<<endl;
-        break;
+        exit(0);
     default:
         mainMenu();
     }
