@@ -31,7 +31,7 @@ void addPlayerCard();
 void addPlayer1Card();
 void addPlayer2Card();
 void updatePlayer();
-bool update(char username[10], int currentAmount);
+bool update(char username[10], unsigned  int currentAmount);
 void newPlayer();
 void printCards(card deck[], int number, bool hideCard, int y);
 void printCard(card newCard,int x, int y);
@@ -55,7 +55,7 @@ card deck[52];
 card playerHand[5], dealerHand[5], player1Hand[5], player2Hand[5];
 int deckCounter=0;
 int playerHandSize=0, player1HandSize=0, player2HandSize=0,dealerHandSize=0,playerSum=0, player1Sum, player2Sum, dealerSum=0;
-int playerAmount=0,  bet=0;
+unsigned int playerAmount=0,  bet=0, firstMove=0;
 char hit;
 bool player1Done=false,player2Done=false;
 HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -73,7 +73,7 @@ void setConsoleSize()
     HWND console = GetConsoleWindow();
     RECT r;
     GetWindowRect(console, &r);
-    MoveWindow(console, 300, 20, 800, 600, TRUE);
+    MoveWindow(console, 300, 20,800, 600, TRUE);
 }
 
 card generateCard()
@@ -228,28 +228,41 @@ void newPlayer()
     system("CLS");
     fstream fileOut("f.txt", ios::app);
     fstream fileIn("f.txt", ios::in);
-    char username[10], usernameFile[10];
-    int initialAmount=100;
-    int amount;
-    cout<<"Inregistrare jucator";
-    cout<<endl<<"Tasteaza numele jucatorului: ";
-    cin>>username;
-    bool ok=true;
-    while(!fileIn.eof())
-    {
-        fileIn>>usernameFile>>amount;
-        if(strcmp(username,usernameFile)==0)
-        {
-            cout<<"Jucatorul este deja inregistrat";
-            ok=false;
-        }
 
-    }
-    if(ok==true)
+    char username[10], usernameFile[10];
+    unsigned int amount;
+    cout<<"Inregistrare jucator";
+    cout<<endl<<"Tasteaza numele jucatorului (10 caractere, continand doar litere ale alfabetului englez:)"<<endl;
+    cin>>skipws>>username;
+    int o=1;
+    for(int i=0; i<strlen(username); i++)
+        if(char(username[i])<65|| (char(username[i])>90&&char(username[i])<97) || char(username[i])>122)
+            o=0;
+    cin.clear();
+    cin.ignore(10000,'\n');
+    if(o==0)
+            newPlayer();
+    else
     {
-        fileOut<<username<<"  "<<initialAmount<<endl;
-        cout<<"Jucatorul a fost inregistrat cu succes cu suma de   "<<initialAmount;
-    }
+
+        bool ok=true;
+        unsigned int initialAmount=100;
+        while(!fileIn.eof())
+        {
+            fileIn>>usernameFile>>amount;
+            if(strcmp(username,usernameFile)==0)
+            {
+                cout<<"Jucatorul este deja inregistrat";
+                ok=false;
+            }
+
+        }
+        if(ok==true)
+        {
+            fileOut<<username<<"  "<<initialAmount<<endl;
+            cout<<"Jucatorul a fost inregistrat cu succes cu suma de   "<<initialAmount;
+        }
+   }
     fileIn.close();
     fileOut.close();
     cout<<endl<<"Apasati M pentru a reveni la meniul principal";
@@ -259,12 +272,11 @@ void newPlayer()
 
 }
 
-bool update(char username[10], int currentAmount)
+bool update(char username[10], unsigned  int currentAmount)
 {
     char usernameFile[10];
-    int  amountFile;
+    unsigned int  amountFile;
     fstream fileIn("f.txt", ios::in);
-    fstream auxFileIn("faux.txt", ios::in);
     fstream auxFileOut("faux.txt", ios::out);
     bool ok=false;
     fileIn>>usernameFile>>amountFile;
@@ -279,7 +291,8 @@ bool update(char username[10], int currentAmount)
             auxFileOut<<usernameFile<<"  "<<amountFile<<endl;
         fileIn>>usernameFile>>amountFile;
     }
-
+    auxFileOut<<EOF;
+    fstream auxFileIn("faux.txt", ios::in);
     fstream fileOut("f.txt", ios::out);
     auxFileIn>>usernameFile>>amountFile;
     while(!auxFileIn.eof())
@@ -299,16 +312,26 @@ void updatePlayer()
     cin>>username;
     cout<<"Tastati noua suma"<<endl;
     cin>>amount;
+    while(cin.fail()||amount<0)
+    {
+        cin.clear();
+        system("cls");
+        cout<<"Ai tastat gresit.Mai incearca."<<endl;
+        cout<<endl<<"Tasteaza noua suma";
+        cin.ignore();
+        cin>>amount;
+    }
+
     if(update(username,amount))
         cout<<"Update facut cu succes";
     else cout<<"Jucatorul nu este inregistrat";
     cout<<endl<<"Apasati M pentru a reveni la meniul principal";
     char key;
     key=_getch();
-    if(key=='m' || key=='M')
-        mainMenu();
-    else
-        cout<<endl<<"Ati tastat gresit";
+    while(key!='m'&&key!='M')
+        key=_getch();
+    mainMenu();
+
 }
 
 void addPlayerCard()
@@ -412,8 +435,15 @@ bool blackjack(card deck[], int number)
 int sum(card deck[], int number)
 {
     int sum=0;
+    int ace=0;
     for(int i=0; i<number; i++)
-        sum=sum+cardValue(deck[i]);
+       {sum=sum+cardValue(deck[i]);
+       if(cardValue(deck[i])==1)
+        ace=1;
+       }
+    if(sum+10<=21&&ace==1)
+        sum=sum+10;
+
     return sum;
 }
 
@@ -511,9 +541,13 @@ void betting()
         cin>>bet;
         if(bet>playerAmount)
             betting();
+        else if(bet<0)
+            betting();
         else
             playerAmount=playerAmount-bet;
     }
+    cin.clear();
+    cin.ignore(1000,'\n');
 }
 
 void playerDoubles(char usernameSingle[10])
@@ -726,6 +760,7 @@ void multiPlayer()
     player1HandSize=0;
     player2Sum=0;
     player2HandSize=0;
+    firstMove=0;
     addPlayer1Card();
     addPlayer1Card();
     addPlayer2Card();
@@ -746,11 +781,14 @@ void multiPlayer()
     while(player1Done==false || player2Done==false)
     {
         system("cls");
+        firstMove++;
         printMulti();
         if(player1Done==false)
         {
             cout<<endl<<"Este randul jucatorului 1";
-            cout<<endl<<"Apasa H pentru Hit, S pentru Stand si D pentru Double";
+            if(firstMove==1) cout<<endl<<"Apasa H pentru Hit, S pentru Stand si D pentru Double";
+            else
+                cout<<endl<<"Apasa H pentru Hit si S pentru Stand";
             char player1Option=_getch();
             if(player1Option=='H' || player1Option=='h')
                 multiPlayerHits(player1Hand,player1HandSize,1);
@@ -769,7 +807,9 @@ void multiPlayer()
         if(player2Done==false)
         {
             cout<<endl<<"Este randul jucatorului 2";
-            cout<<endl<<"Apasa H pentru Hit, S pentru Stand si D pentru Double";
+            if(firstMove==1) cout<<endl<<"Apasa H pentru Hit, S pentru Stand si D pentru Double";
+            else
+                cout<<endl<<"Apasa H pentru Hit si S pentru Stand";
             char player2Option=_getch();
             if(player2Option=='H' || player2Option=='h')
                 multiPlayerHits(player2Hand,player2HandSize,2);
@@ -835,11 +875,14 @@ void scores()
                 cout<<endl<<"Jucatorul nu este inregistrat";
         }
     }
-    cout<<endl<<"Apasati M pentru a reveni la meniul principal";
+    cout<<endl<<"Apasati M pentru a reveni la meniul principal sau R pentru a reconsulta scorul";
     char key;
     key=_getch();
     if(key=='m' || key=='M')
         mainMenu();
+    else if(key=='r'||key=='R')
+        scores();
+
 
 }
 
@@ -898,7 +941,7 @@ void openingScreen()
     string title="Blackjack";
     gotoXY(40,5);
     cout<<title<<endl;
-    gotoXY(33,10);
+    gotoXY(32,10);
     cout<<"Apasa C pentru a continua...";
     char key;
     key=_getch();
