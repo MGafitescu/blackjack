@@ -2,10 +2,12 @@
 #include <conio.h>
 #define _WIN32_WINNT 0x0500
 #include <windows.h>
+#include <wincon.h>
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
 #include <string.h>
+#include <math.h>
 
 
 using namespace std;
@@ -31,7 +33,7 @@ void addPlayerCard();
 void addPlayer1Card();
 void addPlayer2Card();
 void updatePlayer();
-bool update(char username[10], unsigned  int currentAmount);
+bool update(char username[10], unsigned  int currentAmount, int playerWins, int playerLosses, bool automatic);
 void newPlayer();
 void printCards(card deck[], int number, bool hideCard, int y);
 void printCard(card newCard,int x, int y);
@@ -55,7 +57,8 @@ card deck[52];
 card playerHand[5], dealerHand[5], player1Hand[5], player2Hand[5];
 int deckCounter=0;
 int playerHandSize=0, player1HandSize=0, player2HandSize=0,dealerHandSize=0,playerSum=0, player1Sum, player2Sum, dealerSum=0;
-unsigned int playerAmount=0,  bet=0, firstMove=0;
+unsigned int playerAmount=0, firstMove=0;
+int bet=0, playerWins=0, playerLosses=0;
 char hit;
 bool player1Done=false,player2Done=false;
 HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -74,6 +77,7 @@ void setConsoleSize()
     RECT r;
     GetWindowRect(console, &r);
     MoveWindow(console, 300, 20,800, 600, TRUE);
+    SetConsoleTitle( "Blackjack");
 }
 
 card generateCard()
@@ -228,20 +232,19 @@ void newPlayer()
     system("CLS");
     fstream fileOut("f.txt", ios::app);
     fstream fileIn("f.txt", ios::in);
-
     char username[10], usernameFile[10];
-    unsigned int amount;
+    unsigned int amount, wins, losses;
     cout<<"Inregistrare jucator";
     cout<<endl<<"Tasteaza numele jucatorului (10 caractere, continand doar litere ale alfabetului englez:)"<<endl;
     cin>>skipws>>username;
-    int o=1;
+    int letters=1;
     for(int i=0; i<strlen(username); i++)
         if(char(username[i])<65|| (char(username[i])>90&&char(username[i])<97) || char(username[i])>122)
-            o=0;
+            letters=0;
     cin.clear();
     cin.ignore(10000,'\n');
-    if(o==0)
-            newPlayer();
+    if(letters==0)
+        newPlayer();
     else
     {
 
@@ -249,7 +252,7 @@ void newPlayer()
         unsigned int initialAmount=100;
         while(!fileIn.eof())
         {
-            fileIn>>usernameFile>>amount;
+            fileIn>>usernameFile>>amount>>wins>>losses;
             if(strcmp(username,usernameFile)==0)
             {
                 cout<<"Jucatorul este deja inregistrat";
@@ -259,46 +262,63 @@ void newPlayer()
         }
         if(ok==true)
         {
-            fileOut<<username<<"  "<<initialAmount<<endl;
+            fileOut<<username<<"  "<<initialAmount<<"  "<<0<<"  "<<0<<endl;
             cout<<"Jucatorul a fost inregistrat cu succes cu suma de   "<<initialAmount;
+            cout<<endl<<"Atentie: Daca ce ati tastat continea spatiu, tot ce urmeaza dupa primul spatiu a fost ignorat";
+            cout<<endl<<"De asemenea daca ati tastat mai mult de 10 caractere au foost considerate doar primele 10";
         }
-   }
+    }
     fileIn.close();
     fileOut.close();
-    cout<<endl<<"Apasati M pentru a reveni la meniul principal";
+    cout<<endl<<endl<<"Apasati M pentru a reveni la meniul principal si N pentru a inregistra un nou jucator";
     char key;
     key=_getch();
-    mainMenu();
+    while(key!='m'&&key!='M'&&key!='n'&&key!='N')
+        key=_getch();
+    switch (key)
+    {
+    case 'M':
+    case 'm':
+        mainMenu();
+        break;
+    case 'n':
+    case 'N':
+        newPlayer();
+        break;
+    }
 
 }
 
-bool update(char username[10], unsigned  int currentAmount)
+bool update(char username[10], unsigned  int currentAmount, int playerWins, int playerLosses, bool automatic)
 {
     char usernameFile[10];
-    unsigned int  amountFile;
+    unsigned int  amountFile, wins , losses;
     fstream fileIn("f.txt", ios::in);
     fstream auxFileOut("faux.txt", ios::out);
     bool ok=false;
-    fileIn>>usernameFile>>amountFile;
+    fileIn>>usernameFile>>amountFile>>wins>>losses;
     while(!fileIn.eof())
     {
         if(strcmp(usernameFile,username)==0)
         {
-            auxFileOut<<username<<"  "<<currentAmount<<endl;
+            if(automatic==true)
+                auxFileOut<<username<<"  "<<currentAmount<<" "<<playerWins<<"  "<<playerLosses<<endl;
+            else
+                auxFileOut<<username<<"  "<<currentAmount<<" "<<wins<<"  "<<losses<<endl;
             ok=true;
         }
         else
-            auxFileOut<<usernameFile<<"  "<<amountFile<<endl;
-        fileIn>>usernameFile>>amountFile;
+            auxFileOut<<usernameFile<<"  "<<amountFile<<" "<<wins<<"  "<<losses<<endl;
+        fileIn>>usernameFile>>amountFile>>wins>>losses;
     }
     auxFileOut<<EOF;
     fstream auxFileIn("faux.txt", ios::in);
     fstream fileOut("f.txt", ios::out);
-    auxFileIn>>usernameFile>>amountFile;
+    auxFileIn>>usernameFile>>amountFile>>wins>>losses;
     while(!auxFileIn.eof())
     {
-        fileOut<<usernameFile<<"   "<<amountFile<<endl;
-        auxFileIn>>usernameFile>>amountFile;
+        fileOut<<usernameFile<<"   "<<amountFile<<" "<<wins<<"  "<<losses<<endl;
+        auxFileIn>>usernameFile>>amountFile>>wins>>losses;
     }
     return ok;
 }
@@ -309,29 +329,59 @@ void updatePlayer()
     char username[10];
     int amount;
     cout<<"Tastati numele jucatorului pentru care se va face update"<<endl;
-    cin>>username;
-    cout<<"Tastati noua suma"<<endl;
-    cin>>amount;
-    while(cin.fail()||amount<0)
+    cin>>skipws>>username;
+    int letters=1;
+    for(int i=0; i<strlen(username); i++)
+        if(char(username[i])<65|| (char(username[i])>90&&char(username[i])<97) || char(username[i])>122)
+            letters=0;
+    if(letters==0)
+        updatePlayer();
+    else
     {
         cin.clear();
-        system("cls");
-        cout<<"Ai tastat gresit.Mai incearca."<<endl;
-        cout<<endl<<"Tasteaza noua suma";
-        cin.ignore();
+        cin.ignore(10000,'\n');
+        cout<<"Tasteaza noua suma:"<<endl;
         cin>>amount;
+        while(cin.fail()||amount<0||amount>32000)
+        {
+            cin.clear();
+            cin.ignore(1000,'\n');
+            system("cls");
+            cout<<"Ai tastat gresit.Mai incearca."<<endl;
+            cout<<endl<<"Tasteaza noua suma: ";
+            cin>>amount;
+        }
+        cin.clear();
+        cin.ignore(1000,'\n');
+        if(update(username,amount,0,0,false))
+            cout<<"Update facut cu succes";
+        else
+        {
+            cout<<"Jucatorul nu este inregistrat";
+            cout<<endl<<"Doriti inregistrarea?(D/N)";
+            char registration=_getch();
+            while(registration!='D'&&registration!='d'&&registration!='n'&&registration!='N')
+                registration=_getch();
+            if(registration=='D'||registration=='d')
+                newPlayer();
+            else if(registration=='N'||registration=='n')
+                mainMenu();
+        }
     }
-
-    if(update(username,amount))
-        cout<<"Update facut cu succes";
-    else cout<<"Jucatorul nu este inregistrat";
-    cout<<endl<<"Apasati M pentru a reveni la meniul principal";
+    cout<<endl<<"Apasati M pentru a reveni la meniul principal si U pentru a face update la un nou jucator";
     char key;
     key=_getch();
-    while(key!='m'&&key!='M')
+    while(key!='m'&&key!='M'&&key!='u'&&key!='U')
         key=_getch();
-    mainMenu();
-
+    switch (key)
+    {
+    case 'M':
+    case 'm':
+        mainMenu();
+    case 'u':
+    case 'U':
+        updatePlayer();
+    }
 }
 
 void addPlayerCard()
@@ -423,10 +473,8 @@ bool checkBust(card deck[], int number)
 
 bool blackjack(card deck[], int number)
 {
-    int sum=0;
-    for(int i=0; i<number; i++)
-        sum=sum+cardValue(deck[i]);
-    if(sum==21)
+
+    if(sum(deck,number)==21)
         return true;
     return false;
 
@@ -437,10 +485,11 @@ int sum(card deck[], int number)
     int sum=0;
     int ace=0;
     for(int i=0; i<number; i++)
-       {sum=sum+cardValue(deck[i]);
-       if(cardValue(deck[i])==1)
-        ace=1;
-       }
+    {
+        sum=sum+cardValue(deck[i]);
+        if(cardValue(deck[i])==1)
+            ace=1;
+    }
     if(sum+10<=21&&ace==1)
         sum=sum+10;
 
@@ -461,6 +510,7 @@ void playerHits(char usernameSingle[10])
     if(checkBust(playerHand,playerHandSize))
     {
         cout<<endl<<endl<<"Ai pierdut!";
+        playerLosses++;
         hit='n';
         anotherHand(usernameSingle);
     }
@@ -468,11 +518,15 @@ void playerHits(char usernameSingle[10])
     {
         cout<<endl<<endl<<"Blackjack! Ai castigat!";
         playerAmount=playerAmount+2*bet;
+        playerWins++;
     }
     else
     {
         cout<<endl<<endl<<"Apasa H pentru Hit si S pentru Stand";
         hit=_getch();
+        while(hit!='h'&&hit!='H'&&hit!='s'&&hit!='S')
+            hit=_getch();
+
     }
 }
 
@@ -497,11 +551,13 @@ void whoWins()
     {
         cout<<endl<<endl<<"Ai castigat";
         playerAmount=playerAmount+2*bet;
+        playerWins++;
     }
     else if(dealerSum<playerSum&&!checkBust(playerHand,playerHandSize))
     {
         cout<<endl<<endl<<"Ai castigat!";
         playerAmount=playerAmount+2*bet;
+        playerWins++;
     }
     else if(dealerSum==playerSum)
     {
@@ -509,18 +565,23 @@ void whoWins()
         playerAmount=playerAmount+bet;
     }
     else
-        cout<<endl<<endl<<"Ai pierdut!";
+      {
+          cout<<endl<<endl<<"Ai pierdut!";
+          playerLosses++;
+      }
 
 }
 
 void anotherHand(char username[10])
 {
-    update(username, playerAmount);
+    update(username, playerAmount, playerWins, playerLosses, true);
     cout<<endl<<endl<<"Joci inca un joc? (D/N)";
     char anotherHand=_getch();
+    while(anotherHand!='d'&&anotherHand!='D'&&anotherHand!='n'&&anotherHand!='N')
+        anotherHand=_getch();
     if(anotherHand=='D' || anotherHand=='d')
         playHand(username);
-    else
+    else if(anotherHand=='n' || anotherHand=='N')
         mainMenu();
 }
 
@@ -530,8 +591,10 @@ void betting()
     if(playerAmount==0)
     {
         cout<<"Suma disponibila prea mica";
-        cout<<endl<<"Apasa orice tasta pentru a reveni la meniu";
+        cout<<endl<<"Apasa M pentru a reveni la meniu";
         char key=_getch();
+        while(key!='m'&&key!='M')
+            key=_getch();
         mainMenu();
     }
     else
@@ -539,6 +602,16 @@ void betting()
         cout<<"Suma disponibila: "<<playerAmount;
         cout<<endl<<"Cat vrei sa pariezi? ";
         cin>>bet;
+        while(cin.fail())
+        {
+            cin.clear();
+            cin.ignore(1000,'\n');
+            system("cls");
+            cout<<"Suma disponibila: "<<playerAmount;
+            cout<<endl<<"Cat vrei sa pariezi? ";
+            cin>>bet;
+
+        }
         if(bet>playerAmount)
             betting();
         else if(bet<0)
@@ -566,13 +639,13 @@ void playerDoubles(char usernameSingle[10])
     if(checkBust(playerHand,playerHandSize))
     {
         cout<<endl<<endl<<"Ai pierdut!";
-        hit='n';
         anotherHand(usernameSingle);
     }
     else if(blackjack(playerHand,playerHandSize))
     {
         cout<<endl<<endl<<"Blackjack! Ai castigat!";
         playerAmount=playerAmount+2*bet;
+        anotherHand(usernameSingle);
     }
 }
 
@@ -610,7 +683,8 @@ void playHand(char usernameSingle[10])
     }
     cout<<endl<<endl<<"Apasa H pentru Hit,  S pentru Stand si D pentru Double";
     hit=_getch();
-
+    while(hit!='d'&&hit!='D'&&hit!='h'&&hit!='H'&&hit!='S'&&hit!='s')
+        hit=_getch();
     if(hit=='D'|| hit=='d')
         playerDoubles(usernameSingle);
     while((hit=='h'||hit=='H')&&playerHandSize!=5)
@@ -641,16 +715,20 @@ void singlePlayer()
     system("cls");
     fstream fileIn("f.txt", ios::in);
     char usernameSingle[10],usernameFile[10];
-    int amount;
+    int amount, wins, losses;
     bool ok=false;
     cout<<"Tasteaza numele :";
-    cin>>usernameSingle;
+    cin>> skipws >>usernameSingle;
+    cin.clear();
+    cin.ignore(1000,'\n');
     while(!fileIn.eof()&&ok==0)
     {
-        fileIn>>usernameFile>>amount;
+        fileIn>>usernameFile>>amount>>wins>>losses;
         if(strcmp(usernameSingle,usernameFile)==0)
         {
             playerAmount=amount;
+            playerWins=wins;
+            playerLosses=losses;
             cout<<endl<<"Suma disponibila este: "<<playerAmount;
             ok=true;
         }
@@ -659,15 +737,30 @@ void singlePlayer()
     {
         cout<<endl<<"Jucatorul nu este inregistrat.Doriti inregistrarea?(D/N)";
         char registration=_getch();
+        while(registration!='D'&&registration!='d'&&registration!='n'&&registration!='N')
+            registration=_getch();
         if(registration=='D'||registration=='d')
             newPlayer();
-        else
+        else if(registration=='N'||registration=='n')
             mainMenu();
     }
     else if(ok==true && playerAmount==0)
     {
-        cout<<"Suma disponibila este prea mica.";
-        mainMenu();
+        cout<<"Suma disponibila este prea mica.Vrei sa faci update?(D/N)";
+        char update=_getch();
+        while(update!='D'&&update!='d'&&update!='N'&&update!='n')
+            update=_getch();
+        switch (update)
+        {
+        case 'd':
+        case 'D':
+            updatePlayer();
+            break;
+        case 'n':
+        case 'N':
+            mainMenu();
+            break;
+        }
     }
     else
         playHand(usernameSingle);
@@ -688,9 +781,12 @@ void anotherHandMulti()
 {
     cout<<endl<<endl<<"Jucati inca un joc? (D/N)";
     char anotherHand=_getch();
+    while(anotherHand!='d'&&anotherHand!='D'&&anotherHand!='n'&&anotherHand!='N')
+        anotherHand=_getch();
     if(anotherHand=='D' || anotherHand=='d')
         multiPlayer();
     else
+     if(anotherHand=='N' || anotherHand=='n' )
         mainMenu();
 }
 
@@ -790,6 +886,8 @@ void multiPlayer()
             else
                 cout<<endl<<"Apasa H pentru Hit si S pentru Stand";
             char player1Option=_getch();
+            while(player1Option!='d'&&player1Option!='D'&&player1Option!='h'&&player1Option!='H'&&player1Option!='S'&&player1Option!='s')
+                player1Option=_getch();
             if(player1Option=='H' || player1Option=='h')
                 multiPlayerHits(player1Hand,player1HandSize,1);
             if(player1Option=='D' || player1Option=='d')
@@ -811,6 +909,8 @@ void multiPlayer()
             else
                 cout<<endl<<"Apasa H pentru Hit si S pentru Stand";
             char player2Option=_getch();
+            while(player2Option!='d'&&player2Option!='D'&&player2Option!='h'&&player2Option!='H'&&player2Option!='S'&&player2Option!='s')
+                player2Option=_getch();
             if(player2Option=='H' || player2Option=='h')
                 multiPlayerHits(player2Hand,player2HandSize,2);
             if(player2Option=='D' || player2Option=='d')
@@ -837,37 +937,40 @@ void scores()
     cout<<"Tasteaza numele utilizatorului sau ''toti'' pentru a vedea toti utilizatorii: "<<endl;
     char username[10];
     char usernameFile[10];
-    int amount;
+    int amount, wins, losses;
     int ok=0;
-    cin>>username;
+    cin>>skipws>>username;
+    int letters=1;
+    for(int i=0; i<strlen(username); i++)
+        if(char(username[i])<65|| (char(username[i])>90&&char(username[i])<97) || char(username[i])>122)
+            letters=0;
+    if(letters==0)
+        scores();
     cout<<endl;
     char check=fileIn.peek();
     if(check==EOF)
         cout<<"Nu exista utilizatori.";
     else
     {
-
-
         if(strcmp(username,"toti")==0)
         {
 
-            fileIn>>usernameFile>>amount;
+            fileIn>>usernameFile>>amount>>wins>>losses;
             while(!fileIn.eof()&&ok==0)
             {
-                cout<<"User: "<<usernameFile<<"  Suma: "<<amount<<endl;
-                fileIn>>usernameFile>>amount;
+                cout<<"User: "<<usernameFile<<"  Suma: "<<amount<<" Jocuri castigate: "<<wins<<" Jocuri pierdute: "<<losses<<endl;
+                fileIn>>usernameFile>>amount>>wins>>losses;
             }
-
         }
         else
         {
 
             while(!fileIn.eof()&&ok==0)
             {
-                fileIn>>usernameFile>>amount;
+                fileIn>>usernameFile>>amount>>wins>>losses;
                 if(strcmp(username,usernameFile)==0)
                 {
-                    cout<<"User: "<<username<<"  Suma: "<<amount<<endl;
+                    cout<<"User: "<<username<<"  Suma: "<<amount<<" Jocuri castigate: "<<wins<<" Jocuri pierdute: "<<losses<<endl;
                     ok=1;
                 }
             }
@@ -878,12 +981,12 @@ void scores()
     cout<<endl<<"Apasati M pentru a reveni la meniul principal sau R pentru a reconsulta scorul";
     char key;
     key=_getch();
+    while(key!='r'&&key!='R'&&key!='M'&&key!='m')
+        key=_getch();
     if(key=='m' || key=='M')
         mainMenu();
     else if(key=='r'||key=='R')
         scores();
-
-
 }
 
 void mainMenu()
@@ -945,10 +1048,10 @@ void openingScreen()
     cout<<"Apasa C pentru a continua...";
     char key;
     key=_getch();
-    if(key=='C' || key=='c')
-        mainMenu();
-    else
-        openingScreen();
+    while(key!='C' && key!='c')
+        key=_getch();
+    mainMenu();
+
 }
 
 int main()
