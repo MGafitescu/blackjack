@@ -691,7 +691,17 @@ void playHand(char usernameSingle[11])
     while(hit!='d'&&hit!='D'&&hit!='h'&&hit!='H'&&hit!='S'&&hit!='s')
         hit=_getch();
     if(hit=='D'|| hit=='d')
-        playerDoubles(usernameSingle);
+       if(playerAmount>bet)
+            playerDoubles(usernameSingle);
+          else
+          {
+              cout<<endl<<"Suma insuficienta";
+              cout<<endl<<endl<<"Apasa H pentru Hit si S pentru Stand";
+        hit=_getch();
+        while(hit!='h'&&hit!='H'&&hit!='s'&&hit!='S')
+            hit=_getch();
+
+          }
     while((hit=='h'||hit=='H')&&playerHandSize!=5)
     {
         playerHits(usernameSingle);
